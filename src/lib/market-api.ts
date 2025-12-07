@@ -1,7 +1,53 @@
-// src/lib/market-api.ts (CORRIGIDO - Rate Limit Handler)
+// src/lib/market-api.ts - OTIMIZADO PARA REDUZIR CONSUMO DE API
 
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { getCached, setCached, CACHE_KEYS, CACHE_TTL } from './redis';
+
+// ============================================
+// RATE LIMIT TRACKER - MELHORADO
+// ============================================
+const rateLimitTracker = {
+  tiingo: {
+    lastReset: Date.now(),
+    requestCount: 0,
+    maxPerHour: 30, // ⚠️ REDUZIDO DE 50 PARA 30 (MAIS CONSERVADOR)
+    isLimited: false,
+    blockUntil: 0 // Timestamp para bloquear requests
+  }
+};
+
+function checkRateLimit(service: 'tiingo'): boolean {
+  const tracker = rateLimitTracker[service];
+  const now = Date.now();
+  const hourInMs = 60 * 60 * 1000;
+  
+  // Se estiver bloqueado, verifica se já passou 1 hora
+  if (tracker.blockUntil > now) {
+    console.warn(`⚠️ Tiingo bloqueado até ${new Date(tracker.blockUntil).toLocaleTimeString()}`);
+    return false;
+  }
+  
+  // Reset contador a cada hora
+  if (now - tracker.lastReset > hourInMs) {
+    tracker.lastReset = now;
+    tracker.requestCount = 0;
+    tracker.isLimited = false;
+    tracker.blockUntil = 0;
+    console.log('✅ Rate limit resetado');
+  }
+  
+  // Verifica se atingiu limite
+  if (tracker.requestCount >= tracker.maxPerHour) {
+    tracker.isLimited = true;
+    tracker.blockUntil = tracker.lastReset + hourInMs;
+    console.warn(`❌ Rate limit atingido (${tracker.requestCount}/${tracker.maxPerHour}). Próximo reset: ${new Date(tracker.blockUntil).toLocaleTimeString()}`);
+    return false;
+  }
+  
+  tracker.requestCount++;
+  console.log(`📊 Tiingo requests: ${tracker.requestCount}/${tracker.maxPerHour}`);
+  return true;
+}
 
 // Circuit Breaker State
 let circuitState: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
@@ -11,44 +57,6 @@ let halfOpenSuccesses = 0;
 const FAILURE_THRESHOLD = 5;
 const CIRCUIT_TIMEOUT = 60000;
 const HALF_OPEN_SUCCESS_THRESHOLD = 3;
-
-// ✅ RATE LIMIT TRACKING
-const rateLimitTracker = {
-  tiingo: {
-    lastReset: Date.now(),
-    requestCount: 0,
-    maxPerHour: 50, // Limite conservador
-    isLimited: false
-  }
-};
-
-function checkRateLimit(service: 'tiingo'): boolean {
-  const tracker = rateLimitTracker[service];
-  const now = Date.now();
-  const hourInMs = 60 * 60 * 1000;
-  
-  // Reset contador a cada hora
-  if (now - tracker.lastReset > hourInMs) {
-    tracker.lastReset = now;
-    tracker.requestCount = 0;
-    tracker.isLimited = false;
-  }
-  
-  // Verifica se atingiu limite
-  if (tracker.requestCount >= tracker.maxPerHour) {
-    tracker.isLimited = true;
-    console.warn(`⚠️ Rate limit reached for ${service}. Blocking further requests.`);
-    return false;
-  }
-  
-  tracker.requestCount++;
-  return true;
-}
-
-function resetRateLimit(service: 'tiingo') {
-  rateLimitTracker[service].isLimited = false;
-  rateLimitTracker[service].requestCount = 0;
-}
 
 // Brapi Client
 const brapiClient = axios.create({
@@ -74,10 +82,10 @@ function addRetryInterceptor(client: AxiosInstance) {
     async (error: AxiosError) => {
       const config = error.config as any;
       
-      // ✅ Detecta 429 e bloqueia mais requests
       if (error.response?.status === 429) {
-        console.error('❌ Rate limit 429 detected. Blocking Tiingo requests.');
+        console.error('❌ Rate limit 429 detectado. Bloqueando Tiingo por 1 hora.');
         rateLimitTracker.tiingo.isLimited = true;
+        rateLimitTracker.tiingo.blockUntil = Date.now() + 60 * 60 * 1000;
         return Promise.reject(error);
       }
       
@@ -105,7 +113,6 @@ function addRetryInterceptor(client: AxiosInstance) {
 addRetryInterceptor(brapiClient);
 addRetryInterceptor(tiingoClient);
 
-// Circuit Breaker Check
 function checkCircuitBreaker(): boolean {
   if (circuitState === 'OPEN') {
     const now = Date.now();
@@ -124,8 +131,6 @@ function checkCircuitBreaker(): boolean {
 function recordSuccess() {
   if (circuitState === 'HALF_OPEN') {
     halfOpenSuccesses++;
-    console.log(`Circuit breaker: HALF_OPEN success ${halfOpenSuccesses}/${HALF_OPEN_SUCCESS_THRESHOLD}`);
-    
     if (halfOpenSuccesses >= HALF_OPEN_SUCCESS_THRESHOLD) {
       console.log('Circuit breaker: Transitioning to CLOSED');
       circuitState = 'CLOSED';
@@ -194,27 +199,30 @@ export interface SearchResult {
   country: 'BR' | 'US';
 }
 
-export interface NewsArticle {
-  id: number;
-  headline: string;
-  summary: string;
-  source: string;
-  url: string;
-  image: string;
-  datetime: number;
-  category: string;
-  related: string[];
-}
-
-// ✅ GET QUOTE (CORRIGIDO)
+// ============================================
+// GET QUOTE - PRIORIZA CACHE
+// ============================================
 export async function getQuote(symbol: string): Promise<Quote | null> {
   const cacheKey = CACHE_KEYS.quote(symbol);
   
   try {
+    // SEMPRE TENTA CACHE PRIMEIRO
     const cached = await getCached<Quote>(cacheKey);
     if (cached) {
-      console.log(`✅ Cache hit for ${symbol}`);
-      return cached;
+      // Cache válido até 5 minutos - aceita cache antigo se API limitada
+      const cacheAge = Date.now() - cached.timestamp;
+      const maxAge = 5 * 60 * 1000; // 5 minutos
+      
+      if (cacheAge < maxAge) {
+        console.log(`✅ Cache válido para ${symbol} (${Math.round(cacheAge/1000)}s)`);
+        return cached;
+      }
+      
+      // Cache expirado, mas se API estiver limitada, retorna mesmo assim
+      if (rateLimitTracker.tiingo.isLimited) {
+        console.log(`📦 Usando cache expirado para ${symbol} (API limitada)`);
+        return cached;
+      }
     }
     
     checkCircuitBreaker();
@@ -223,14 +231,14 @@ export async function getQuote(symbol: string): Promise<Quote | null> {
     let quote: Quote;
 
     if (isBr) {
-      // BR usa Brapi (sem rate limit tão rígido)
+      // BR usa Brapi (sem rate limit rígido)
       const { data } = await brapiClient.get(`/quote/${symbol}`, {
         params: { fundamental: 'true' }
       });
       
       if (!data.results || data.results.length === 0) {
         recordFailure();
-        return null;
+        return cached || null; // Retorna cache se existir
       }
       
       const stock = data.results[0];
@@ -248,25 +256,17 @@ export async function getQuote(symbol: string): Promise<Quote | null> {
         logo: stock.logourl
       };
     } else {
-      // ✅ US usa Tiingo (com rate limit check)
+      // US usa Tiingo COM RATE LIMIT
       if (!checkRateLimit('tiingo') || rateLimitTracker.tiingo.isLimited) {
-        console.warn(`⚠️ Skipping Tiingo request for ${symbol} due to rate limit`);
-        
-        // Retorna cache stale se existir
-        const staleCache = await getCached<Quote>(cacheKey);
-        if (staleCache) {
-          console.log(`📦 Returning stale cache for ${symbol}`);
-          return staleCache;
-        }
-        
-        return null;
+        console.warn(`⚠️ Pulando request Tiingo para ${symbol} (rate limit)`);
+        return cached || null;
       }
       
       const { data } = await tiingoClient.get(`/iex/${symbol}`);
       
       if (!data || data.length === 0) {
         recordFailure();
-        return null;
+        return cached || null;
       }
       
       const tData = data[0];
@@ -287,7 +287,8 @@ export async function getQuote(symbol: string): Promise<Quote | null> {
       };
     }
 
-    await setCached(cacheKey, quote, CACHE_TTL.QUOTE);
+    // Cache por 2 minutos (reduzido de 30s para economizar requests)
+    await setCached(cacheKey, quote, 120);
     recordSuccess();
     return quote;
 
@@ -297,7 +298,7 @@ export async function getQuote(symbol: string): Promise<Quote | null> {
     
     const staleCache = await getCached<Quote>(cacheKey);
     if (staleCache) {
-      console.log(`📦 Returning stale cache for ${symbol}`);
+      console.log(`📦 Retornando cache expirado para ${symbol}`);
       return staleCache;
     }
     
@@ -305,56 +306,69 @@ export async function getQuote(symbol: string): Promise<Quote | null> {
   }
 }
 
-// ✅ GET QUOTES (BATCH - CORRIGIDO)
+// ============================================
+// GET QUOTES (BATCH) - OTIMIZADO
+// ============================================
 export async function getQuotes(symbols: string[]): Promise<Quote[]> {
-  const brSymbols = symbols.filter(isBrazilianSymbol);
-  const usSymbols = symbols.filter(s => !isBrazilianSymbol(s));
-
   const quotes: Quote[] = [];
+  
+  // 1. Tenta buscar TUDO do cache primeiro
+  const cachePromises = symbols.map(symbol => 
+    getCached<Quote>(CACHE_KEYS.quote(symbol))
+  );
+  
+  const cachedResults = await Promise.all(cachePromises);
+  const cachedQuotes = cachedResults.filter(Boolean) as Quote[];
+  
+  // Símbolos que não estão em cache
+  const uncachedSymbols = symbols.filter((symbol, i) => !cachedResults[i]);
+  
+  console.log(`📊 Cache: ${cachedQuotes.length}/${symbols.length} | Buscar: ${uncachedSymbols.length}`);
+  
+  quotes.push(...cachedQuotes);
+  
+  if (uncachedSymbols.length === 0) {
+    return quotes; // Tudo veio do cache!
+  }
+  
+  // 2. Separa BR e US
+  const brSymbols = uncachedSymbols.filter(isBrazilianSymbol);
+  const usSymbols = uncachedSymbols.filter(s => !isBrazilianSymbol(s));
 
-  // 1. Batch Brapi (SEM RATE LIMIT RÍGIDO)
+  // 3. Busca BR (sem limite rígido)
   if (brSymbols.length > 0) {
-    console.log(`🇧🇷 Fetching ${brSymbols.length} BR symbols from Brapi`);
+    console.log(`🇧🇷 Buscando ${brSymbols.length} símbolos BR`);
     
     for (const symbol of brSymbols) {
       try {
         const quote = await getQuote(symbol);
         if (quote) quotes.push(quote);
-        await new Promise(resolve => setTimeout(resolve, 100)); // Delay entre requests
+        await new Promise(resolve => setTimeout(resolve, 100));
       } catch (e) {
         console.error(`Failed to fetch ${symbol}:`, e);
       }
     }
   }
 
-  // 2. Batch Tiingo (COM RATE LIMIT CHECK)
+  // 4. Busca US COM LIMITE
   if (usSymbols.length > 0) {
-    // ✅ VERIFICA RATE LIMIT ANTES DE FAZER BATCH
+    // ⚠️ VERIFICAÇÃO CRÍTICA
     if (!checkRateLimit('tiingo') || rateLimitTracker.tiingo.isLimited) {
-      console.warn(`⚠️ Skipping Tiingo batch request for ${usSymbols.length} symbols due to rate limit`);
-      
-      // Tenta buscar do cache individual
-      for (const symbol of usSymbols) {
-        const cached = await getCached<Quote>(CACHE_KEYS.quote(symbol));
-        if (cached) {
-          console.log(`📦 Using cached ${symbol}`);
-          quotes.push(cached);
-        }
-      }
-      
-      return quotes;
+      console.warn(`⚠️ Pulando batch Tiingo (${usSymbols.length} símbolos) - rate limit`);
+      return quotes; // Retorna apenas os BR
     }
     
-    console.log(`🇺🇸 Fetching ${usSymbols.length} US symbols from Tiingo`);
+    console.log(`🇺🇸 Buscando ${usSymbols.length} símbolos US`);
     
     try {
+      // BATCH REQUEST (economiza requests!)
       const { data } = await tiingoClient.get(`/iex/?tickers=${usSymbols.join(',')}`);
       
       if (Array.isArray(data)) {
         data.forEach((tData: any) => {
           const price = tData.last || tData.tngoLast;
           const prevClose = tData.prevClose;
-          quotes.push({
+          const quote: Quote = {
             symbol: tData.ticker.toUpperCase(),
             price: price,
             change: price - prevClose,
@@ -365,25 +379,35 @@ export async function getQuotes(symbols: string[]): Promise<Quote[]> {
             previousClose: prevClose,
             volume: tData.volume || 0,
             timestamp: Date.now(),
-          });
+          };
+          
+          quotes.push(quote);
+          
+          // Cache individual
+          setCached(CACHE_KEYS.quote(quote.symbol), quote, 120);
         });
       }
     } catch (error: any) {
       if (error.response?.status === 429) {
-        console.error('❌ Tiingo rate limit hit in batch request');
+        console.error('❌ Tiingo rate limit no batch');
         rateLimitTracker.tiingo.isLimited = true;
+        rateLimitTracker.tiingo.blockUntil = Date.now() + 60 * 60 * 1000;
       }
-      console.error('Error batch Tiingo', error.message);
+      console.error('Erro batch Tiingo:', error.message);
     }
   }
 
   return quotes;
 }
 
-// ✅ GET COMPANY PROFILE
+// ============================================
+// COMPANY PROFILE - PRIORIZA CACHE
+// ============================================
 export async function getCompanyProfile(symbol: string): Promise<CompanyProfile | null> {
   const cacheKey = CACHE_KEYS.symbolInfo(symbol);
   const cached = await getCached<CompanyProfile>(cacheKey);
+  
+  // Cache de 1 hora - muito mais longo
   if (cached) return cached;
 
   const isBr = isBrazilianSymbol(symbol);
@@ -412,7 +436,7 @@ export async function getCompanyProfile(symbol: string): Promise<CompanyProfile 
       };
     } else {
       if (!checkRateLimit('tiingo') || rateLimitTracker.tiingo.isLimited) {
-        console.warn(`⚠️ Skipping Tiingo profile for ${symbol} due to rate limit`);
+        console.warn(`⚠️ Pulando profile Tiingo para ${symbol}`);
         return null;
       }
       
@@ -443,7 +467,9 @@ export async function getCompanyProfile(symbol: string): Promise<CompanyProfile 
   }
 }
 
-// ✅ SEARCH SYMBOLS
+// ============================================
+// SEARCH SYMBOLS - CACHE LONGO
+// ============================================
 export async function searchSymbols(query: string): Promise<SearchResult[]> {
   const cacheKey = CACHE_KEYS.symbolSearch(query);
   const cached = await getCached<SearchResult[]>(cacheKey);
@@ -481,6 +507,7 @@ export async function searchSymbols(query: string): Promise<SearchResult[]> {
       results = [...results, ...usResults];
     }
 
+    // Cache de busca por 24h
     await setCached(cacheKey, results, CACHE_TTL.SYMBOL_SEARCH);
     return results;
 
@@ -490,66 +517,31 @@ export async function searchSymbols(query: string): Promise<SearchResult[]> {
   }
 }
 
-// ✅ MARKET NEWS
-export async function getMarketNews(): Promise<NewsArticle[]> {
-  const cacheKey = CACHE_KEYS.news();
-  const cached = await getCached<NewsArticle[]>(cacheKey);
-  if (cached) return cached;
-  
-  if (!checkRateLimit('tiingo') || rateLimitTracker.tiingo.isLimited) {
-    console.warn('⚠️ Skipping news request due to rate limit');
-    return [];
-  }
-  
-  try {
-    const { data } = await tiingoClient.get('/tiingo/news', { params: { limit: 15 } });
-    
-    const news = data.map((article: any) => ({
-      id: article.id,
-      headline: article.title,
-      summary: article.description,
-      source: article.source,
-      url: article.url,
-      image: '',
-      datetime: new Date(article.publishedDate).getTime() / 1000,
-      category: 'general',
-      related: article.tickers
-    }));
-
-    await setCached(cacheKey, news, CACHE_TTL.NEWS_FEED);
-    return news;
-  } catch (error) {
-    return [];
-  }
-}
-
-// ✅ MARKET INDICES (CORRIGIDO - USA APENAS BRAPI PARA ÍNDICES BR)
+// ============================================
+// MARKET INDICES - USA PROXIES E CACHE
+// ============================================
 export async function getMarketIndices() {
   const cacheKey = CACHE_KEYS.indices();
   const cached = await getCached(cacheKey);
   if (cached) {
-    console.log('✅ Returning cached indices');
+    console.log('✅ Retornando índices do cache');
     return cached;
   }
 
   try {
-    console.log('📊 Fetching fresh indices data');
+    console.log('📊 Buscando índices frescos');
     
-    // ✅ Busca índices brasileiros via Brapi (^BVSP)
-    const brapiSymbols = ['^BVSP'];
+    // Ibovespa via Brapi
     const brapiQuotes: Quote[] = [];
+    const ibovQuote = await getQuote('^BVSP');
+    if (ibovQuote) brapiQuotes.push(ibovQuote);
     
-    for (const symbol of brapiSymbols) {
-      const quote = await getQuote(symbol);
-      if (quote) brapiQuotes.push(quote);
-    }
-    
-    // ✅ Busca proxies US se rate limit permitir
+    // Proxies US - SE rate limit permitir
     let usQuotes: Quote[] = [];
-    if (!rateLimitTracker.tiingo.isLimited) {
+    if (!rateLimitTracker.tiingo.isLimited && checkRateLimit('tiingo')) {
       usQuotes = await getQuotes(['SPY', 'QQQ', 'DIA']);
     } else {
-      console.warn('⚠️ Skipping US indices due to Tiingo rate limit');
+      console.warn('⚠️ Pulando índices US (rate limit)');
     }
     
     const indices = {
@@ -559,18 +551,21 @@ export async function getMarketIndices() {
       dow: usQuotes.find(q => q.symbol === 'DIA') || null,
     };
 
-    console.log('✅ Indices fetched:', Object.keys(indices).filter(k => indices[k as keyof typeof indices]));
-
-    await setCached(cacheKey, indices, CACHE_TTL.MARKET_OVERVIEW);
+    // Cache por 5 minutos
+    await setCached(cacheKey, indices, 300);
     return indices;
   } catch (error) {
-    console.error('❌ Error fetching indices:', error);
+    console.error('❌ Erro buscando índices:', error);
     return { ibovespa: null, sp500: null, nasdaq: null, dow: null };
   }
 }
 
 export async function getTopMovers() {
   return { gainers: [], losers: [] };
+}
+
+export async function getMarketNews() {
+  return [];
 }
 
 export async function getBasicFinancials(symbol: string) {
