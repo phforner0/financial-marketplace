@@ -1,0 +1,49 @@
+.container {
+    background-color: var(--color-bg-secondary);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    border: 1px solid var(--color-border);
+    height: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+  }
+  
+  .header h3 {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+  }
+  
+  .timeframes {
+    display: flex;
+    gap: var(--space-xs);
+    background-color: var(--color-bg-tertiary);
+    padding: 4px;
+    border-radius: var(--radius-md);
+  }
+  
+  .timeframes button {
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    transition: all 0.2s;
+  }
+  
+  .timeframes button.active {
+    background-color: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .chartWrapper {
+    flex: 1;
+    width: 100%;
+    min-height: 0; /* Fix flex child height issue */
+  }

@@ -1,0 +1,57 @@
+.card {
+    background-color: #141414;
+    border: 1px solid #2a2a2a;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    height: 100%;
+  }
+  
+  .title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background-color: #1e1e1e;
+    border-radius: 0.5rem;
+    transition: all 0.15s;
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .item:hover {
+    background-color: #252525;
+  }
+  
+  .symbol {
+    font-weight: 600;
+    font-family: monospace;
+    display: block;
+  }
+  
+  .price {
+    font-size: 0.875rem;
+    color: #6b7280;
+  }
+  
+  .change {
+    font-weight: 600;
+    font-size: 0.875rem;
+  }
+  
+  .gain { color: #10b981; }
+  .loss { color: #ef4444; }

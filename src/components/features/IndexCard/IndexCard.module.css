@@ -1,0 +1,29 @@
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    background-color: var(--color-bg-secondary, #141414);
+    border-radius: 0.75rem;
+    border: 1px solid var(--color-border, #2a2a2a);
+  }
+  
+  .name {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+  }
+  
+  .value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-family: monospace;
+  }
+  
+  .change {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  
+  .positive { color: #10b981; }
+  .negative { color: #ef4444; }

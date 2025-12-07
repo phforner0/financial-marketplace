@@ -1,0 +1,132 @@
+/* src/components/ui/Input/Input.module.css */
+
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .fullWidth {
+    width: 100%;
+  }
+  
+  /* ============================================
+     LABEL
+     ============================================ */
+  
+  .label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+  }
+  
+  .required {
+    color: var(--color-danger);
+    margin-left: var(--space-xs);
+  }
+  
+  /* ============================================
+     INPUT WRAPPER
+     ============================================ */
+  
+  .inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    height: 40px;
+  }
+  
+  .inputWrapper:hover {
+    border-color: var(--color-border-hover);
+  }
+  
+  .inputWrapper:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+  }
+  
+  .inputWrapper.error {
+    border-color: var(--color-danger);
+  }
+  
+  .inputWrapper.error:focus-within {
+    box-shadow: 0 0 0 3px var(--color-danger-light);
+  }
+  
+  .inputWrapper.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* ============================================
+     INPUT
+     ============================================ */
+  
+  .input {
+    flex: 1;
+    height: 100%;
+    padding: 0 var(--space-md);
+    font-size: var(--font-size-base);
+    color: var(--color-text-primary);
+    background: transparent;
+    border: none;
+    outline: none;
+  }
+  
+  .input::placeholder {
+    color: var(--color-text-tertiary);
+  }
+  
+  .input:disabled {
+    cursor: not-allowed;
+  }
+  
+  /* Input with icons */
+  .hasLeftIcon .input {
+    padding-left: var(--space-xs);
+  }
+  
+  .hasRightIcon .input {
+    padding-right: var(--space-xs);
+  }
+  
+  /* ============================================
+     ICONS
+     ============================================ */
+  
+  .leftIcon,
+  .rightIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-tertiary);
+    flex-shrink: 0;
+  }
+  
+  .leftIcon {
+    margin-left: var(--space-md);
+    margin-right: var(--space-xs);
+  }
+  
+  .rightIcon {
+    margin-right: var(--space-md);
+    margin-left: var(--space-xs);
+  }
+  
+  /* ============================================
+     HELPER TEXT
+     ============================================ */
+  
+  .helperText {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+  }
+  
+  .errorText {
+    font-size: var(--font-size-xs);
+    color: var(--color-danger);
+  }

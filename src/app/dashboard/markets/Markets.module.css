@@ -1,0 +1,66 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2xl);
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-xl);
+  }
+  
+  .title {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .subtitle {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+  }
+  
+  .searchBar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-sm) var(--space-md);
+    min-width: 300px;
+    transition: all var(--transition-fast);
+  }
+  
+  .searchBar:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-light);
+  }
+  
+  .searchIcon {
+    font-size: var(--font-size-lg);
+    color: var(--color-text-tertiary);
+  }
+  
+  .searchInput {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-base);
+  }
+  
+  .searchInput::placeholder {
+    color: var(--color-text-tertiary);
+  }
+  
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: var(--space-sm);
+    border-bottom: 1px solid var(--color-border);
+  }
