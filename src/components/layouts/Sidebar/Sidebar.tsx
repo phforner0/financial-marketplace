@@ -18,10 +18,12 @@ export default function Sidebar() {
 
   return (
     <aside className={styles.sidebar}>
-      <div className={styles.logo}>FinMarket</div>
+      <Link href="/dashboard" className={styles.logo}>
+        💼 FinMarket
+      </Link>
+      
       <nav className={styles.nav}>
         {menuItems.map((item) => {
-          // Verifica se a rota atual começa com o href do item (para active state)
           const isActive = item.href === '/dashboard' 
             ? pathname === '/dashboard'
             : pathname.startsWith(item.href);
