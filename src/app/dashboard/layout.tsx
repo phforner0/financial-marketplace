@@ -3,6 +3,7 @@ import Sidebar from '@/components/layouts/Sidebar/Sidebar';
 import Header from '@/components/layouts/Header/Header';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import styles from './DashboardLayout.module.css';
+import { ToastProvider } from '@/components/ui/Toast/Toast';
 
 export default function DashboardLayout({
   children,
@@ -11,6 +12,7 @@ export default function DashboardLayout({
 }) {
   return (
     <ErrorBoundary>
+      <ToastProvider>
       <div className={styles.layout}>
         {/* Sidebar - Desktop Only */}
         <Sidebar />
@@ -50,6 +52,7 @@ export default function DashboardLayout({
           </a>
         </nav>
       </div>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

@@ -1,10 +1,11 @@
-// src/app/dashboard/markets/[symbol]/page.tsx - NOVA PÁGINA DE DETALHES
+// src/app/dashboard/markets/[symbol]/page.tsx - COM TRADINGVIEW
 'use client';
 
 import { useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button/Button';
 import { TradeModal } from '@/components/features/TradeModal/TradeModal';
+import { TradingViewWidget } from '@/components/features/TradingViewWidget/TradingViewWidget';
 import styles from './SymbolDetail.module.css';
 
 interface Quote {
@@ -27,6 +28,7 @@ export default function SymbolDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showTradeModal, setShowTradeModal] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchQuote();
@@ -34,14 +36,17 @@ export default function SymbolDetailPage() {
     return () => clearInterval(interval);
   }, [symbol]);
 
-  async function fetchQuote() {
+  async function fetchQuote(silent = false) {
+    if (!silent) setLoading(true);
+    else setRefreshing(true);
+    
     try {
       const res = await fetch(`/api/markets/quote?symbol=${symbol}`);
       const data = await res.json();
       
       if (!res.ok) {
         setError(data.error || 'Failed to load quote');
-        setLoading(false);
+        if (!silent) setLoading(false);
         return;
       }
       
@@ -51,6 +56,7 @@ export default function SymbolDetailPage() {
       setError('Failed to load data');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }
 
@@ -90,6 +96,48 @@ export default function SymbolDetailPage() {
     }
   }
 
+  async function handleCreateAlert() {
+    if (!quote) return;
+    
+    const threshold = prompt(`Create price alert for ${symbol}\n\nCurrent price: $${quote.price.toFixed(2)}\n\nEnter target price:`);
+    
+    if (!threshold) return;
+    
+    const price = parseFloat(threshold);
+    if (isNaN(price) || price <= 0) {
+      alert('Invalid price');
+      return;
+    }
+    
+    try {
+      const directionUp = price > quote.price;
+      
+      const res = await fetch('/api/alerts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol,
+          type: 'PRICE',
+          priceThreshold: price,
+          directionUp
+        })
+      });
+      
+      if (res.ok) {
+        alert(`✅ Alert created! You'll be notified when ${symbol} ${directionUp ? 'rises above' : 'falls below'} $${price.toFixed(2)}`);
+      } else {
+        const data = await res.json();
+        alert(`❌ ${data.error || 'Failed to create alert'}`);
+      }
+    } catch (err) {
+      alert('❌ Failed to create alert');
+    }
+  }
+
+  const handleTradeSuccess = () => {
+    fetchQuote(true);
+  };
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -108,8 +156,8 @@ export default function SymbolDetailPage() {
           <span style={{ fontSize: '3rem' }}>⚠️</span>
           <h2>Failed to Load Data</h2>
           <p>{error || 'Quote not found'}</p>
-          <Button onClick={() => window.history.back()}>
-            ← Go Back
+          <Button onClick={() => fetchQuote()}>
+            ↻ Retry
           </Button>
         </div>
       </div>
@@ -132,6 +180,15 @@ export default function SymbolDetailPage() {
               {isPositive ? '+' : ''}{quote.change.toFixed(2)} ({isPositive ? '+' : ''}{quote.changePercent.toFixed(2)}%)
             </span>
           </div>
+          {refreshing && (
+            <div style={{ 
+              fontSize: '0.75rem', 
+              color: 'var(--color-text-tertiary)',
+              marginTop: '8px'
+            }}>
+              ↻ Refreshing...
+            </div>
+          )}
         </div>
         
         <div className={styles.actions}>
@@ -140,8 +197,17 @@ export default function SymbolDetailPage() {
             size="md"
             onClick={handleAddToWatchlist}
           >
-            ⭐ Add to Watchlist
+            ⭐ Watchlist
           </Button>
+          
+          <Button 
+            variant="secondary" 
+            size="md"
+            onClick={handleCreateAlert}
+          >
+            🔔 Alert
+          </Button>
+          
           <Button 
             variant="primary" 
             size="md"
@@ -182,12 +248,27 @@ export default function SymbolDetailPage() {
         </div>
       </div>
 
-      {/* Chart Placeholder */}
+      {/* TradingView Chart */}
       <div className={styles.chartSection}>
-        <div className={styles.chartPlaceholder}>
-          <span style={{ fontSize: '3rem' }}>📈</span>
-          <h3>Chart Coming Soon</h3>
-          <p>TradingView integration will be added in the next update</p>
+        <TradingViewWidget 
+          symbol={symbol}
+          theme="dark"
+          height={500}
+          interval="D"
+        />
+      </div>
+
+      {/* Additional Sections */}
+      <div className={styles.infoSection}>
+        <h2 className={styles.sectionTitle}>About {symbol}</h2>
+        <div className={styles.infoCard}>
+          <div className={styles.infoPlaceholder}>
+            <span style={{ fontSize: '2.5rem' }}>📊</span>
+            <p>Company fundamentals and news coming soon</p>
+            <p style={{ fontSize: '0.875rem', color: 'var(--color-text-tertiary)', marginTop: '8px' }}>
+              This will include: company description, key metrics, analyst ratings, and recent news
+            </p>
+          </div>
         </div>
       </div>
 
@@ -197,6 +278,7 @@ export default function SymbolDetailPage() {
           symbol={symbol}
           currentPrice={quote.price}
           onClose={() => setShowTradeModal(false)}
+          onSuccess={handleTradeSuccess}
         />
       )}
     </div>
