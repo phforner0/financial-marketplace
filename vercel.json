@@ -1,8 +1,14 @@
 {
-    "crons": [
-      {
-        "path": "/api/cron/check-alerts",
-        "schedule": "* * * * *"
-      }
-    ]
-  }
+  "crons": [
+    {
+      "path": "/api/cron/check-alerts",
+      "schedule": "* * * * *",
+      "description": "Check price alerts every minute"
+    },
+    {
+      "path": "/api/cron/update-portfolio-snapshots",
+      "schedule": "0 0 * * *",
+      "description": "Create daily portfolio snapshots at midnight UTC"
+    }
+  ]
+}

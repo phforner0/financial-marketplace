@@ -1,0 +1,253 @@
+/* src/components/features/AllocationChart/AllocationChart.module.css */
+
+.container {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+    height: 100%;
+  }
+  
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-lg);
+  }
+  
+  .title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-xs) 0;
+  }
+  
+  .subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+  
+  .viewToggle {
+    display: flex;
+    gap: var(--space-xs);
+    background-color: var(--color-bg-tertiary);
+    padding: 4px;
+    border-radius: var(--radius-md);
+  }
+  
+  .viewToggle button {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+  
+  .viewToggle button.active {
+    background-color: var(--color-bg-elevated);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+    flex: 1;
+    min-height: 0;
+  }
+  
+  .chartWrapper {
+    width: 100%;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+  }
+  
+  /* Diversification Score */
+  .scoreCard {
+    padding: var(--space-lg);
+    background-color: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+  
+  .scoreLabel {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+  }
+  
+  .scoreValue {
+    font-size: var(--font-size-3xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+  }
+  
+  .scoreBar {
+    height: 8px;
+    background-color: var(--color-bg-primary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  
+  .scoreFill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: var(--radius-full);
+  }
+  
+  .scoreDesc {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+  }
+  
+  /* Allocation List */
+  .allocationList {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    overflow-y: auto;
+    max-height: 400px;
+  }
+  
+  .allocationItem {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+  
+  .allocationHeader {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  
+  .allocationDot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  
+  .allocationName {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-medium);
+    flex: 1;
+  }
+  
+  .allocationPercent {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-family: var(--font-mono);
+  }
+  
+  .allocationBar {
+    height: 4px;
+    background-color: var(--color-bg-primary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+  
+  .allocationFill {
+    height: 100%;
+    transition: width 0.3s ease;
+    border-radius: var(--radius-full);
+  }
+  
+  .allocationValue {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    font-family: var(--font-mono);
+  }
+  
+  /* Tooltip */
+  .tooltip {
+    background-color: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  .tooltipTitle {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-xs);
+  }
+  
+  .tooltipValue {
+    color: var(--color-text-primary);
+    font-family: var(--font-mono);
+  }
+  
+  .tooltipSymbols {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    margin-top: var(--space-xs);
+    padding-top: var(--space-xs);
+    border-top: 1px solid var(--color-border);
+  }
+  
+  /* Empty State */
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    min-height: 300px;
+    text-align: center;
+    color: var(--color-text-secondary);
+  }
+  
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .content {
+      grid-template-columns: 1fr;
+    }
+  
+    .chartWrapper {
+      height: 250px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .header {
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+  
+    .viewToggle {
+      width: 100%;
+    }
+  
+    .viewToggle button {
+      flex: 1;
+    }
+  
+    .chartWrapper {
+      height: 200px;
+    }
+  
+    .allocationList {
+      max-height: 300px;
+    }
+  }

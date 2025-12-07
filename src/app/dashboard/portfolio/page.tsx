@@ -1,42 +1,35 @@
-// src/app/dashboard/portfolio/page.tsx - COMPLETAMENTE REFATORADO
+// src/app/dashboard/portfolio/page.tsx - VERSÃO COMPLETA
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import useSWR from 'swr';
 import { Button } from '@/components/ui/Button/Button';
 import { TradeModal } from '@/components/features/TradeModal/TradeModal';
-import PortfolioChart from '@/components/features/PortfolioChart/PortfolioChart';
+import { PortfolioChart } from '@/components/features/PortfolioChart/PortfolioChart';
+import { AllocationChart } from '@/components/features/AllocationChart/AllocationChart';
 import styles from './Portfolio.module.css';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-interface Position {
-  id: string;
-  symbol: string;
-  qty: number;
-  avgPrice: number;
-  currentPrice: number;
-  value: number;
-  profitLoss: number;
-  profitLossPercent: number;
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(value);
 }
 
-interface Portfolio {
-  id: string;
-  totalValue: number;
-  cash: number;
-  positions?: Position[];
+function formatPercent(value: number): string {
+  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 }
 
 export default function PortfolioPage() {
   const [tradeSymbol, setTradeSymbol] = useState<string | null>(null);
   const [tradePrice, setTradePrice] = useState<number>(0);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   
-  const { data: portfolio, error, mutate } = useSWR<Portfolio>('/api/portfolio', fetcher, {
-    refreshInterval: 30000 // Atualiza a cada 30s
-  });
-  
-  const { data: positions } = useSWR<Position[]>('/api/portfolio/positions', fetcher, {
+  const { data: portfolio, error, mutate } = useSWR('/api/portfolio', fetcher, {
     refreshInterval: 30000
   });
 
@@ -47,7 +40,7 @@ export default function PortfolioPage() {
 
   const handleCloseModal = () => {
     setTradeSymbol(null);
-    mutate(); // Revalida dados após trade
+    mutate();
   };
 
   // Loading State
@@ -76,11 +69,8 @@ export default function PortfolioPage() {
     );
   }
 
-  const hasPositions = positions && positions.length > 0;
-  const totalPnL = positions?.reduce((sum, pos) => sum + pos.profitLoss, 0) || 0;
-  const totalPnLPercent = portfolio?.totalValue 
-    ? ((portfolio.totalValue - portfolio.cash) / (portfolio.totalValue - portfolio.cash - totalPnL)) * 100 
-    : 0;
+  const hasPositions = portfolio.positions && portfolio.positions.length > 0;
+  const perf = portfolio.performance || {};
 
   return (
     <div className={styles.container}>
@@ -91,18 +81,15 @@ export default function PortfolioPage() {
           <p className={styles.subtitle}>Track your investments and performance</p>
         </div>
         <div className={styles.actions}>
-          <Button 
-            variant="secondary" 
-            onClick={() => window.location.href = '/dashboard/markets'}
-          >
-            🔍 Browse Markets
+          <Button variant="secondary" onClick={() => alert('Deposit coming soon')}>
+            💰 Deposit
+          </Button>
+          <Button variant="secondary" onClick={() => alert('Withdraw coming soon')}>
+            💸 Withdraw
           </Button>
           <Button 
             variant="primary"
-            onClick={() => {
-              setTradeSymbol('');
-              setTradePrice(0);
-            }}
+            onClick={() => handleTrade('', 0)}
           >
             💼 New Trade
           </Button>
@@ -111,72 +98,135 @@ export default function PortfolioPage() {
 
       {/* Summary Cards */}
       <div className={styles.summary}>
+        {/* Total Value */}
         <div className={styles.summaryCard}>
           <div className={styles.summaryHeader}>
             <span className={styles.summaryLabel}>Total Value</span>
             <span className={styles.summaryIcon}>💼</span>
           </div>
           <div className={styles.summaryValue}>
-            ${portfolio?.totalValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {formatCurrency(portfolio.totalValue)}
           </div>
           <div className={styles.summaryChange}>
-            <span className={totalPnL >= 0 ? styles.positive : styles.negative}>
-              {totalPnL >= 0 ? '+' : ''}${Math.abs(totalPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              {' '}({totalPnL >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%)
+            <span className={portfolio.todayChange >= 0 ? styles.positive : styles.negative}>
+              {formatCurrency(portfolio.todayChange)} ({formatPercent(portfolio.todayChangePercent)})
             </span>
-            <span className={styles.summaryPeriod}>all time</span>
+            <span className={styles.summaryPeriod}>today</span>
           </div>
         </div>
 
+        {/* Cash Available */}
         <div className={styles.summaryCard}>
           <div className={styles.summaryHeader}>
             <span className={styles.summaryLabel}>Cash Available</span>
             <span className={styles.summaryIcon}>💰</span>
           </div>
           <div className={styles.summaryValue}>
-            ${portfolio?.cash.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            {formatCurrency(portfolio.cash)}
           </div>
           <div className={styles.summaryChange}>
             <span className={styles.summaryPeriod}>ready to invest</span>
           </div>
         </div>
 
+        {/* Total Return */}
         <div className={styles.summaryCard}>
           <div className={styles.summaryHeader}>
-            <span className={styles.summaryLabel}>Total P/L</span>
-            <span className={styles.summaryIcon}>{totalPnL >= 0 ? '📈' : '📉'}</span>
+            <span className={styles.summaryLabel}>Total Return</span>
+            <span className={styles.summaryIcon}>
+              {portfolio.totalReturn >= 0 ? '📈' : '📉'}
+            </span>
           </div>
           <div className={styles.summaryValue}>
-            <span className={totalPnL >= 0 ? styles.positive : styles.negative}>
-              {totalPnL >= 0 ? '+' : ''}${Math.abs(totalPnL).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            <span className={portfolio.totalReturn >= 0 ? styles.positive : styles.negative}>
+              {formatCurrency(portfolio.totalReturn)}
             </span>
           </div>
           <div className={styles.summaryChange}>
-            <span className={totalPnL >= 0 ? styles.positive : styles.negative}>
-              {totalPnL >= 0 ? '+' : ''}{totalPnLPercent.toFixed(2)}%
+            <span className={portfolio.totalReturn >= 0 ? styles.positive : styles.negative}>
+              {formatPercent(portfolio.totalReturnPercent)}
             </span>
-            <span className={styles.summaryPeriod}>total return</span>
+            <span className={styles.summaryPeriod}>all time</span>
           </div>
         </div>
 
+        {/* Holdings */}
         <div className={styles.summaryCard}>
           <div className={styles.summaryHeader}>
             <span className={styles.summaryLabel}>Holdings</span>
             <span className={styles.summaryIcon}>📊</span>
           </div>
           <div className={styles.summaryValue}>
-            {positions?.length || 0}
+            {portfolio.positions?.length || 0}
           </div>
           <div className={styles.summaryChange}>
-            <span className={styles.summaryPeriod}>active positions</span>
+            <span className={styles.summaryPeriod}>
+              {formatCurrency(portfolio.invested)} invested
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Chart */}
+      {/* Performance Stats */}
       {hasPositions && (
-        <div className={styles.chartSection}>
-          <PortfolioChart />
+        <div className={styles.performanceStats}>
+          <div className={styles.statBox}>
+            <div className={styles.statLabel}>Best Day</div>
+            <div className={`${styles.statValue} ${styles.positive}`}>
+              {perf.bestDay ? formatCurrency(perf.bestDay.change) : 'N/A'}
+            </div>
+            <div className={styles.statSubtext}>
+              {perf.bestDay ? formatPercent(perf.bestDay.changePercent) : ''}
+            </div>
+          </div>
+
+          <div className={styles.statBox}>
+            <div className={styles.statLabel}>Worst Day</div>
+            <div className={`${styles.statValue} ${styles.negative}`}>
+              {perf.worstDay ? formatCurrency(perf.worstDay.change) : 'N/A'}
+            </div>
+            <div className={styles.statSubtext}>
+              {perf.worstDay ? formatPercent(perf.worstDay.changePercent) : ''}
+            </div>
+          </div>
+
+          <div className={styles.statBox}>
+            <div className={styles.statLabel}>Win Rate</div>
+            <div className={styles.statValue}>
+              {perf.winRate?.toFixed(1) || 0}%
+            </div>
+            <div className={styles.statSubtext}>
+              {perf.totalTrades || 0} trades
+            </div>
+          </div>
+
+          <div className={styles.statBox}>
+            <div className={styles.statLabel}>Best Performer</div>
+            <div className={`${styles.statValue} ${styles.positive}`}>
+              {perf.bestPerformer?.symbol || 'N/A'}
+            </div>
+            <div className={styles.statSubtext}>
+              {perf.bestPerformer ? formatPercent(perf.bestPerformer.return) : ''}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Charts Grid */}
+      {hasPositions && (
+        <div className={styles.chartsGrid}>
+          {/* Performance Chart */}
+          <div className={styles.chartSection}>
+            <PortfolioChart portfolioId={portfolio.id} />
+          </div>
+
+          {/* Allocation Chart */}
+          <div className={styles.allocationSection}>
+            <AllocationChart 
+              byAssetType={portfolio.allocation?.byAssetType}
+              bySector={portfolio.allocation?.bySector}
+            />
+          </div>
         </div>
       )}
 
@@ -186,13 +236,12 @@ export default function PortfolioPage() {
           <h2 className={styles.holdingsTitle}>Holdings</h2>
           {hasPositions && (
             <div className={styles.holdingsStats}>
-              {positions.length} position{positions.length !== 1 ? 's' : ''}
+              {portfolio.positions.length} position{portfolio.positions.length !== 1 ? 's' : ''}
             </div>
           )}
         </div>
 
         {!hasPositions ? (
-          // Empty State
           <div className={styles.emptyState}>
             <div className={styles.emptyStateIcon}>📊</div>
             <h3 className={styles.emptyStateTitle}>No Holdings Yet</h3>
@@ -207,23 +256,27 @@ export default function PortfolioPage() {
             </Button>
           </div>
         ) : (
-          // Holdings Table
           <div className={styles.table}>
             <div className={styles.tableHeader}>
               <div className={styles.tableCell}>Symbol</div>
               <div className={styles.tableCell}>Shares</div>
               <div className={styles.tableCell}>Avg Price</div>
-              <div className={styles.tableCell}>Current Price</div>
-              <div className={styles.tableCell}>Market Value</div>
-              <div className={styles.tableCell}>P/L</div>
+              <div className={styles.tableCell}>Current</div>
+              <div className={styles.tableCell}>Value</div>
+              <div className={styles.tableCell}>Day Change</div>
+              <div className={styles.tableCell}>Total P/L</div>
+              <div className={styles.tableCell}>Allocation</div>
               <div className={styles.tableCell}>Actions</div>
             </div>
 
-            {positions?.map((position) => {
-              const isProfitable = position.profitLoss >= 0;
+            {portfolio.positions.map((position: any) => {
+              const isExpanded = expandedRow === position.id;
               
               return (
-                <div key={position.id} className={styles.tableRow}>
+                <div 
+                  key={position.id} 
+                  className={`${styles.tableRow} ${isExpanded ? styles.expanded : ''}`}
+                >
                   <div className={`${styles.tableCell} ${styles.symbolCell}`}>
                     <a 
                       href={`/dashboard/markets/${position.symbol}`}
@@ -238,24 +291,47 @@ export default function PortfolioPage() {
                   </div>
                   
                   <div className={styles.tableCell}>
-                    ${position.avgPrice.toFixed(2)}
+                    {formatCurrency(position.avgPrice)}
                   </div>
                   
                   <div className={styles.tableCell}>
-                    ${position.currentPrice.toFixed(2)}
+                    {formatCurrency(position.currentPrice)}
                   </div>
                   
                   <div className={styles.tableCell}>
-                    ${position.value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatCurrency(position.marketValue)}
                   </div>
                   
                   <div className={styles.tableCell}>
                     <div className={styles.plCell}>
-                      <span className={isProfitable ? styles.positive : styles.negative}>
-                        {isProfitable ? '+' : ''}${Math.abs(position.profitLoss).toFixed(2)}
+                      <span className={position.dayChange >= 0 ? styles.positive : styles.negative}>
+                        {formatCurrency(position.dayChange)}
                       </span>
-                      <span className={`${styles.plPercent} ${isProfitable ? styles.positive : styles.negative}`}>
-                        ({isProfitable ? '+' : ''}{position.profitLossPercent.toFixed(2)}%)
+                      <span className={`${styles.plPercent} ${position.dayChangePercent >= 0 ? styles.positive : styles.negative}`}>
+                        ({formatPercent(position.dayChangePercent)})
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.tableCell}>
+                    <div className={styles.plCell}>
+                      <span className={position.unrealizedPL >= 0 ? styles.positive : styles.negative}>
+                        {formatCurrency(position.unrealizedPL)}
+                      </span>
+                      <span className={`${styles.plPercent} ${position.unrealizedPLPercent >= 0 ? styles.positive : styles.negative}`}>
+                        ({formatPercent(position.unrealizedPLPercent)})
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.tableCell}>
+                    <div className={styles.allocationBar}>
+                      <div 
+                        className={styles.allocationFill}
+                        style={{ width: `${position.allocation}%` }}
+                      />
+                      <span className={styles.allocationText}>
+                        {position.allocation.toFixed(1)}%
                       </span>
                     </div>
                   </div>
