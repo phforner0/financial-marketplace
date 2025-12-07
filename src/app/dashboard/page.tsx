@@ -1,11 +1,11 @@
-// src/app/dashboard/page.tsx
+// src/app/dashboard/page.tsx - IMPORT CORRIGIDO
 'use client';
 
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
 import { useState, Suspense } from 'react';
 import useSWR from 'swr';
-import { MarketHeatmap } from '@/components/features/MarketHeatmap/MarketHeatmap';
+import { MarketHeatmap } from '@/components/features/MarketHeatmap/MarketHeatmap'; // ✅ Named export
 import PortfolioChart from '@/components/features/PortfolioChart/PortfolioChart';
 import styles from './Dashboard.module.css';
 
@@ -277,7 +277,7 @@ export default function DashboardPage() {
   );
 }
 
-// Helper components (mantidos do original)
+// Helper components
 interface StatCardProps {
   label: string;
   icon: string;
