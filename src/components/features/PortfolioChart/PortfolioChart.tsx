@@ -12,12 +12,12 @@ import styles from './PortfolioChart.module.css';
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
 interface PortfolioChartProps {
-  portfolioId: string;
+  portfolioId?: string;
 }
 
 type Timeframe = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
 
-export function PortfolioChart({ portfolioId }: PortfolioChartProps) {
+export default function PortfolioChart({ portfolioId }: PortfolioChartProps) {
   const [timeframe, setTimeframe] = useState<Timeframe>('1M');
   const [showBenchmark, setShowBenchmark] = useState(true);
 

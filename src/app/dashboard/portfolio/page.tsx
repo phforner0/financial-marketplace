@@ -5,7 +5,7 @@ import { useState } from 'react';
 import useSWR from 'swr';
 import { Button } from '@/components/ui/Button/Button';
 import { TradeModal } from '@/components/features/TradeModal/TradeModal';
-import { PortfolioChart } from '@/components/features/PortfolioChart/PortfolioChart';
+import  PortfolioChart  from '@/components/features/PortfolioChart/PortfolioChart';
 import { AllocationChart } from '@/components/features/AllocationChart/AllocationChart';
 import styles from './Portfolio.module.css';
 

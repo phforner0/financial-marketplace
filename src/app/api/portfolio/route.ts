@@ -1,4 +1,4 @@
-// src/app/api/portfolio/route.ts - VERSÃO COMPLETA COM MÉTRICAS REAIS
+// src/app/api/portfolio/route.ts - VERSÃO CORRIGIDA
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
@@ -34,13 +34,13 @@ interface PortfolioMetrics {
     bySector: Record<string, { value: number; symbols: string[] }>;
   };
   performance: {
-    bestDay: { date: string; change: number; changePercent: number };
-    worstDay: { date: string; change: number; changePercent: number };
+    bestDay: { date: string; change: number; changePercent: number; } | null;
+    worstDay: { date: string; change: number; changePercent: number; } | null;
     winRate: number;
     totalTrades: number;
-    bestPerformer: { symbol: string; return: number };
-    worstPerformer: { symbol: string; return: number };
-    biggestHolding: { symbol: string; value: number };
+    bestPerformer: { symbol: string; return: number; } | null;
+    worstPerformer: { symbol: string; return: number; } | null;
+    biggestHolding: { symbol: string; value: number; } | null;
   };
 }
 
@@ -175,8 +175,8 @@ export async function GET() {
       take: 365 // 1 ano de histórico
     });
 
-    let bestDay = { date: '', change: 0, changePercent: 0 };
-    let worstDay = { date: '', change: 0, changePercent: 0 };
+    let bestDay: { date: string; change: number; changePercent: number; } | null = null;
+    let worstDay: { date: string; change: number; changePercent: number; } | null = null;
 
     snapshots.forEach((snapshot, i) => {
       if (i === 0) return; // Skip primeiro
@@ -187,7 +187,7 @@ export async function GET() {
         ? (change / prevSnapshot.totalValue) * 100 
         : 0;
 
-      if (change > bestDay.change) {
+      if (!bestDay || change > bestDay.change) {
         bestDay = {
           date: snapshot.date.toISOString(),
           change,
@@ -195,7 +195,7 @@ export async function GET() {
         };
       }
 
-      if (change < worstDay.change) {
+      if (!worstDay || change < worstDay.change) {
         worstDay = {
           date: snapshot.date.toISOString(),
           change,
@@ -226,11 +226,11 @@ export async function GET() {
       (a, b) => b.unrealizedPLPercent - a.unrealizedPLPercent
     );
 
-    const bestPerformer = sortedByReturn[0] 
+    const bestPerformer = sortedByReturn.length > 0 && sortedByReturn[0]
       ? { symbol: sortedByReturn[0].symbol, return: sortedByReturn[0].unrealizedPLPercent }
       : null;
 
-    const worstPerformer = sortedByReturn[sortedByReturn.length - 1]
+    const worstPerformer = sortedByReturn.length > 0 && sortedByReturn[sortedByReturn.length - 1]
       ? { symbol: sortedByReturn[sortedByReturn.length - 1].symbol, return: sortedByReturn[sortedByReturn.length - 1].unrealizedPLPercent }
       : null;
 
@@ -240,7 +240,7 @@ export async function GET() {
 
     // 10. Calcula métricas totais
     const totalValue = (portfolio.cash || 0) + totalMarketValue;
-    const totalReturn = totalMarketValue - totalInvested + (portfolio.realizedPL || 0);
+    const totalReturn = totalMarketValue - totalInvested;
     const totalReturnPercent = totalInvested > 0 
       ? (totalReturn / totalInvested) * 100 
       : 0;
@@ -265,8 +265,8 @@ export async function GET() {
         bySector: allocationBySector
       },
       performance: {
-        bestDay: bestDay.change !== 0 ? bestDay : null,
-        worstDay: worstDay.change !== 0 ? worstDay : null,
+        bestDay,
+        worstDay,
         winRate,
         totalTrades,
         bestPerformer,
