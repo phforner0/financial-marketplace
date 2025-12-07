@@ -275,9 +275,11 @@ export async function getQuotes(symbols: string[]): Promise<Quote[]> {
   // 1. Batch Brapi
   if (brSymbols.length > 0) {
     try {
-      const { data } = await brapiClient.get(`/quote/${brSymbols.join(',')}`);
-      if (data.results) {
-        data.results.forEach((stock: any) => {
+      // ✅ BRAPI FREE = 1 SÍMBOLO/REQUEST
+      for (const symbol of brSymbols) {
+        const { data } = await brapiClient.get(`/quote/${symbol}`);
+        if (data.results) {
+          const stock = data.results[0];
           quotes.push({
             symbol: stock.symbol,
             price: stock.regularMarketPrice,
@@ -291,7 +293,8 @@ export async function getQuotes(symbols: string[]): Promise<Quote[]> {
             timestamp: Date.now(),
             logo: stock.logourl
           });
-        });
+        }
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     } catch (e) { console.error('Error batch Brapi', e); }
   }

@@ -26,8 +26,12 @@ export default function MagicLinkCallbackPage() {
       if (result?.ok) {
         router.push(callback);
       } else {
-        router.push('/auth/login?error=signin_failed');
+        console.error('Magic link sign-in failed:', result?.error);
+        router.push('/auth/login?error=magic_link_failed');
       }
+    }).catch((error) => {
+      console.error('Magic link error:', error);
+      router.push('/auth/login?error=magic_link_error');
     });
   }, [email, callback, router]);
 

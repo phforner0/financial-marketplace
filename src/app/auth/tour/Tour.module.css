@@ -17,7 +17,7 @@
     right: 0;
     height: 4px;
     background-color: var(--color-bg-secondary);
-    z-index: 100;
+    z-index: var(--z-fixed);
   }
   
   .progressFill {
@@ -30,7 +30,7 @@
     position: fixed;
     top: var(--space-lg);
     left: var(--space-lg);
-    z-index: 10;
+    z-index: var(--z-base);
   }
   
   .stepBadge {
@@ -52,16 +52,6 @@
     animation: fadeIn 0.5s ease-out;
   }
   
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
   
   .emojiContainer {
     margin-bottom: var(--space-xl);

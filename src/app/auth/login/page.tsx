@@ -2,7 +2,7 @@
 // src/app/auth/login/page.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -104,6 +104,7 @@ export default function LoginPage() {
   };
 
   return (
+    
     <div className={styles.container}>
       <div className={styles.card}>
         {/* Header */}
@@ -120,7 +121,7 @@ export default function LoginPage() {
             <span className={styles.alertContent}>{error}</span>
           </div>
         )}
-
+        <Suspense fallback={<div>Loading...</div>}>
         {/* Login Form */}
         <form onSubmit={handleSubmit} className={styles.form}>
           <Input
@@ -176,7 +177,7 @@ export default function LoginPage() {
             Sign In
           </Button>
         </form>
-
+        </Suspense>
         {/* Magic Link Option */}
         <div className={styles.textCenter} style={{ marginBottom: 'var(--space-md)' }}>
           <button

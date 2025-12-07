@@ -14,7 +14,7 @@ export async function GET() {
       // US Finance
       'JPM', 'BAC', 'V',
       // BR Blue Chips (Brapi)
-      'PETR4', 'VALE3', 'ITUB4', 'BBDC4', 'BBAS3', 'WEGE3'
+      'PETR4',
     ];
 
     const quotes = await marketAPI.getQuotes(symbols);
