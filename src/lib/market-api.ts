@@ -7,8 +7,10 @@ import { getCached, setCached, CACHE_KEYS, CACHE_TTL } from './redis';
 let circuitState: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
 let failureCount = 0;
 let lastFailureTime = 0;
+let halfOpenSuccesses = 0; // ADICIONAR contador
 const FAILURE_THRESHOLD = 5;
-const CIRCUIT_TIMEOUT = 60000; // 1 minuto
+const CIRCUIT_TIMEOUT = 60000;
+const HALF_OPEN_SUCCESS_THRESHOLD = 3; // ADICIONAR limiar
 
 // Brapi Client com Retry
 const brapiClient = axios.create({
@@ -70,6 +72,7 @@ function checkCircuitBreaker(): boolean {
       console.log('Circuit breaker: Transitioning to HALF_OPEN');
       circuitState = 'HALF_OPEN';
       failureCount = 0;
+      halfOpenSuccesses = 0; // RESETAR contador
       return true;
     }
     throw new Error('Circuit breaker is OPEN - API temporarily unavailable');
@@ -79,15 +82,32 @@ function checkCircuitBreaker(): boolean {
 
 function recordSuccess() {
   if (circuitState === 'HALF_OPEN') {
-    console.log('Circuit breaker: Transitioning to CLOSED');
-    circuitState = 'CLOSED';
+    halfOpenSuccesses++; // INCREMENTAR
+    console.log(`Circuit breaker: HALF_OPEN success ${halfOpenSuccesses}/${HALF_OPEN_SUCCESS_THRESHOLD}`);
+    
+    // SÓ FECHA APÓS MÚLTIPLOS SUCESSOS
+    if (halfOpenSuccesses >= HALF_OPEN_SUCCESS_THRESHOLD) {
+      console.log('Circuit breaker: Transitioning to CLOSED');
+      circuitState = 'CLOSED';
+      halfOpenSuccesses = 0;
+    }
+  } else if (circuitState === 'CLOSED') {
+    // Em CLOSED, resetar contador de falhas
+    failureCount = 0;
   }
-  failureCount = 0;
 }
 
 function recordFailure() {
   failureCount++;
   lastFailureTime = Date.now();
+  
+  if (circuitState === 'HALF_OPEN') {
+    // FALHA EM HALF_OPEN = VOLTA PRA OPEN IMEDIATAMENTE
+    console.log('Circuit breaker: Failure in HALF_OPEN, reopening');
+    circuitState = 'OPEN';
+    halfOpenSuccesses = 0;
+    return;
+  }
   
   if (failureCount >= FAILURE_THRESHOLD) {
     console.log('Circuit breaker: Transitioning to OPEN');

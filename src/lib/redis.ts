@@ -1,10 +1,10 @@
 // src/lib/redis.ts
 import { Redis } from '@upstash/redis';
+import { env } from './env';
 
-// Initialize Redis client
 const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+  url: env.UPSTASH_REDIS_REST_URL,
+  token: env.UPSTASH_REDIS_REST_TOKEN,
 });
 
 /* ============================================
@@ -217,37 +217,53 @@ export async function getRateLimitRemaining(
  * Get multiple values at once
  */
 export async function mget<T extends unknown[]>(keys: string[]): Promise<(T | null)[]> {
-    try {
-      const results = await redis.mget<T>(...keys);
-      
-      if (!results) {
-        return keys.map(() => null);
-      }
-      
-      // Redis mget retorna array, mas pode ter valores null
-      return results as (T | null)[];
-    } catch (error) {
-      console.error('Redis MGET error:', error);
+  if (keys.length === 0) return [];
+  
+  try {
+    // Upstash retorna array de valores ou null
+    const results = await redis.mget<T>(...keys);
+    
+    if (!results || !Array.isArray(results)) {
+      console.warn('Redis mget returned unexpected type:', typeof results);
       return keys.map(() => null);
     }
+    
+    // Garantir que cada elemento é T ou null
+    return results.map(item => {
+      // Upstash pode retornar string "null" em alguns casos
+      if (item === null || item === 'null' || item === undefined) {
+        return null;
+      }
+      return item as T;
+    });
+  } catch (error) {
+    console.error('Redis MGET error:', error);
+    return keys.map(() => null);
   }
+}
+
+export async function mset<T extends Record<string, unknown>>(entries: T): Promise<void> {
+  if (Object.keys(entries).length === 0) return;
   
-  /**
-   * Set multiple values at once
-   */
-  export async function mset(entries: Record<string, unknown>): Promise<void> {
-    try {
-      // Note: Upstash Redis mset doesn't support TTL
-      // Use pipeline for TTL support
-      const pipeline = redis.pipeline();
-      Object.entries(entries).forEach(([key, value]) => {
-        pipeline.set(key, value);
-      });
-      await pipeline.exec();
-    } catch (error) {
-      console.error('Redis MSET error:', error);
-    }
+  try {
+    // Upstash pipeline é mais confiável que mset nativo
+    const pipeline = redis.pipeline();
+    
+    Object.entries(entries).forEach(([key, value]) => {
+      // Serializar valores complexos
+      const serialized = typeof value === 'object' 
+        ? JSON.stringify(value) 
+        : value;
+      
+      pipeline.set(key, serialized);
+    });
+    
+    await pipeline.exec();
+  } catch (error) {
+    console.error('Redis MSET error:', error);
+    throw error; // Propagar erro para retry logic
   }
+}
 
 /* ============================================
    INVALIDATION HELPERS

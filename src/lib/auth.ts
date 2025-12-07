@@ -6,6 +6,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import type { Adapter } from 'next-auth/adapters';
+import { env } from './env';
 
 // Providers dinâmicos - só adiciona Google se credenciais existirem
 const providers: any[] = [
@@ -75,6 +76,8 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
+  secret: env.NEXTAUTH_SECRET, // Força uso da variável validada
+
   pages: {
     signIn: '/auth/login',
     signOut: '/logout',
@@ -84,6 +87,10 @@ export const authOptions: NextAuthOptions = {
 
   callbacks: {
     async jwt({ token, user, trigger, session }) {
+      // Validar assinatura JWT explicitamente
+      if (!env.NEXTAUTH_SECRET) {
+        throw new Error('NEXTAUTH_SECRET not configured');
+      }
       // Initial sign in
       if (user) {
         token.id = user.id;

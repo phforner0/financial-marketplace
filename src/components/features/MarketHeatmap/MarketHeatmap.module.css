@@ -1,0 +1,92 @@
+/* src/components/features/MarketHeatmap/MarketHeatmap.module.css */
+.container {
+    position: relative;
+    width: 100%;
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    overflow: hidden;
+  }
+  
+  .controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-lg);
+    gap: var(--space-md);
+  }
+  
+  .filterGroup {
+    display: flex;
+    gap: var(--space-xs);
+    background-color: var(--color-bg-tertiary);
+    padding: 4px;
+    border-radius: var(--radius-md);
+  }
+  
+  .filterBtn {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+  }
+  
+  .filterBtn:hover {
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-elevated);
+  }
+  
+  .filterBtn.active {
+    color: var(--color-primary);
+    background-color: var(--color-bg-elevated);
+  }
+  
+  .svg {
+    width: 100%;
+    height: 600px;
+    display: block;
+  }
+  
+  .loading,
+  .error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-lg);
+  }
+  
+  .error {
+    color: var(--color-danger);
+  }
+  
+  /* Tooltip styling (inline no D3, mas caso precise) */
+  .tooltip {
+    position: absolute;
+    background-color: var(--color-bg-elevated);
+    border: 1px solid var(--color-border);
+    padding: var(--space-sm);
+    border-radius: var(--radius-md);
+    pointer-events: none;
+    z-index: 10;
+    font-size: var(--font-size-sm);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  @media (max-width: 768px) {
+    .svg {
+      height: 400px;
+    }
+    
+    .controls {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }

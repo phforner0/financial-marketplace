@@ -9,6 +9,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  DragEndEvent,
 } from '@dnd-kit/core';
 import {
   arrayMove,
@@ -19,6 +20,7 @@ import {
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import useSWR, { mutate } from 'swr';
+import styles from '../../Dashboard.module.css';
 
 interface WatchlistItem {
   id: string;

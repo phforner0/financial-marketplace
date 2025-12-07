@@ -16,7 +16,15 @@ const data = [
   { date: 'Jul', value: 3490 },
 ];
 
-export default function PortfolioChart() {
+interface PortfolioChartProps {
+  portfolioId?: string;
+  timeframe?: '1D' | '1W' | '1M' | '3M' | '1Y' | 'ALL';
+}
+
+export default function PortfolioChart({ 
+  portfolioId, 
+  timeframe = '1M' 
+}: PortfolioChartProps) {
   return (
     <div className={styles.container}>
       <div className={styles.header}>

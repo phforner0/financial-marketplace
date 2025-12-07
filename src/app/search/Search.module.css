@@ -1,0 +1,23 @@
+/* src/app/search/Search.module.css (NOVO ARQUIVO) */
+.container {
+    padding: var(--space-xl);
+  }
+  
+  .results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--space-lg);
+    margin-top: var(--space-xl);
+  }
+  
+  .loading,
+  .error,
+  .empty {
+    text-align: center;
+    padding: var(--space-2xl);
+    color: var(--color-text-secondary);
+  }
+  
+  .error {
+    color: var(--color-danger);
+  }

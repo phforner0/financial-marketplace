@@ -19,7 +19,8 @@ export async function GET() {
       username: true,
       avatar: true,
       isPremium: true,
-      onboardingCompleted: true
+      onboardingCompleted: true,
+      tourCompleted: true, // ADICIONAR
     }
   });
 

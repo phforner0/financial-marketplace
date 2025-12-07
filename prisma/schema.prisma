@@ -278,8 +278,8 @@ model Portfolio {
   currency    String        @default("USD")
   isDefault   Boolean       @default(false)
   
-  totalValue  Float?        @default(0)
-  cash        Float?        @default(0)
+  totalValue  Float         @default(0) // REMOVER nullable
+  cash        Float         @default(0) // REMOVER nullable
   
   positions   Position[]
   snapshots   PortfolioSnapshot[]
@@ -297,11 +297,11 @@ model Position {
   symbol        String
   assetType     AssetType  @default(STOCK)
   qty           Float      @default(0)
-  avgPrice      Float?
-  currentPrice  Float?
-  marketValue   Float?
-  unrealizedPL  Float?
-  realizedPL    Float?     @default(0)
+  avgPrice      Float      @default(0) // ADICIONAR default
+  currentPrice  Float?     // OK nullable
+  marketValue   Float?     // OK nullable
+  unrealizedPL  Float?     // OK nullable
+  realizedPL    Float      @default(0) // REMOVER nullable
   
   updatedAt     DateTime   @updatedAt
   portfolio     Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
@@ -440,12 +440,12 @@ model Alert {
   percentChange  Float?
   volumeMultiplier Float?
   technicalIndicator String?
-  directionUp    Boolean?
+  directionUp    Boolean       @default(true) // REMOVER nullable, ADICIONAR default
   
   channels       AlertChannel[]
   recurring      Boolean       @default(false)
   expiresAt      DateTime?
-  maxTriggers    Int?          @default(1)
+  maxTriggers    Int           @default(1)
   triggerCount   Int           @default(0)
   
   message        String?
