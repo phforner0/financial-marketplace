@@ -1,78 +1,36 @@
-/* src/app/(dashboard)/DashboardLayout.module.css */
+/* src/app/dashboard/DashboardLayout.module.css - CORRIGIDO */
 
 .layout {
-    display: grid;
-    grid-template-columns: var(--sidebar-width) 1fr;
-    min-height: 100vh;
-    background-color: var(--color-bg-primary);
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  min-height: 100vh;
+  background-color: var(--color-bg-primary);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-color: var(--color-bg-primary);
+}
+
+.content {
+  flex: 1;
+  padding: var(--space-xl);
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  background-color: var(--color-bg-primary);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
   }
-  
-  .main {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-  
+
   .content {
-    flex: 1;
-    padding: var(--space-xl);
-    max-width: 1440px;
-    width: 100%;
-    margin: 0 auto;
+    padding: var(--space-lg);
   }
-  
-  /* Bottom Navigation (Mobile) */
-  .bottomNav {
-    display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 64px;
-    background-color: var(--color-bg-secondary);
-    border-top: 1px solid var(--color-border);
-    z-index: var(--z-fixed);
-    padding: var(--space-xs) 0;
-  }
-  
-  .bottomNavItem {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    flex: 1;
-    gap: var(--space-xs);
-    color: var(--color-text-secondary);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-  }
-  
-  .bottomNavItem:hover {
-    color: var(--color-text-primary);
-  }
-  
-  .bottomNavIcon {
-    font-size: var(--font-size-xl);
-  }
-  
-  .bottomNavLabel {
-    font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-  }
-  
-  /* Mobile Responsive */
-  @media (max-width: 768px) {
-    .layout {
-      grid-template-columns: 1fr;
-    }
-  
-    .content {
-      padding: var(--space-lg);
-      padding-bottom: calc(64px + var(--space-lg)); /* Space for bottom nav */
-    }
-  
-    .bottomNav {
-      display: flex;
-    }
-  }
+}

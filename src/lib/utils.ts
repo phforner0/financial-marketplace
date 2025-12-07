@@ -12,7 +12,8 @@ export function cn(...inputs: ClassValue[]) {
 /**
  * Format currency (USD)
  */
-export function formatCurrency(value: number, decimals: number = 2): string {
+export function formatCurrency(value: number | undefined | null, decimals: number = 2): string {
+  if (value === undefined || value === null || isNaN(value)) return '$0.00';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
@@ -24,32 +25,35 @@ export function formatCurrency(value: number, decimals: number = 2): string {
 /**
  * Format percentage
  */
-export function formatPercent(value: number, decimals: number = 2): string {
+export function formatPercent(value: number | undefined | null, decimals: number = 2): string {
+  if (value === undefined || value === null || isNaN(value)) return '0.00%';
   return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}%`;
 }
 
 /**
  * Format large numbers (1.2M, 3.4B, etc)
  */
-export function formatNumber(value: number): string {
+export function formatNumber(value: number | undefined | null): string {
+  if (value === undefined || value === null || isNaN(value) || value === 0) return 'N/A';
   if (value >= 1e12) return `${(value / 1e12).toFixed(2)}T`;
   if (value >= 1e9) return `${(value / 1e9).toFixed(2)}B`;
   if (value >= 1e6) return `${(value / 1e6).toFixed(2)}M`;
   if (value >= 1e3) return `${(value / 1e3).toFixed(2)}K`;
-  return value.toString();
+  return value.toFixed(2);
 }
 
 /**
  * Format volume
  */
-export function formatVolume(value: number): string {
+export function formatVolume(value: number | undefined | null): string {
   return formatNumber(value);
 }
 
 /**
  * Get color class based on value (gain/loss)
  */
-export function getChangeColor(value: number): string {
+export function getChangeColor(value: number | undefined | null): string {
+  if (value === undefined || value === null || isNaN(value)) return 'neutral';
   if (value > 0) return 'gain';
   if (value < 0) return 'loss';
   return 'neutral';

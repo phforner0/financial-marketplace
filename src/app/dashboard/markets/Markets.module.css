@@ -1,66 +1,166 @@
+/* src/app/dashboard/markets/Markets.module.css */
 .container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xl);
-  }
-  
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.subtitle {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.filters {
+  display: flex;
+  gap: var(--space-sm);
+  background-color: var(--color-bg-tertiary);
+  padding: 4px;
+  border-radius: var(--radius-md);
+}
+
+.filters button {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.filters button:hover:not(:disabled) {
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-elevated);
+}
+
+.filters button.active {
+  color: var(--color-primary);
+  background-color: var(--color-bg-elevated);
+}
+
+.filters button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-lg);
+}
+
+.loading,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  min-height: 400px;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+/* Skeleton Loading */
+.skeletonCard {
+  padding: var(--space-lg);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.skeletonHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.skeletonSymbol {
+  width: 80px;
+  height: 24px;
+  background: linear-gradient(90deg, var(--color-bg-tertiary) 0%, var(--color-bg-elevated) 50%, var(--color-bg-tertiary) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeletonIcon {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(90deg, var(--color-bg-tertiary) 0%, var(--color-bg-elevated) 50%, var(--color-bg-tertiary) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeletonPrice {
+  width: 120px;
+  height: 32px;
+  background: linear-gradient(90deg, var(--color-bg-tertiary) 0%, var(--color-bg-elevated) 50%, var(--color-bg-tertiary) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeletonChange {
+  width: 90px;
+  height: 20px;
+  background: linear-gradient(90deg, var(--color-bg-tertiary) 0%, var(--color-bg-elevated) 50%, var(--color-bg-tertiary) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+.skeletonMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.skeletonMetaItem {
+  width: 80px;
+  height: 16px;
+  background: linear-gradient(90deg, var(--color-bg-tertiary) 0%, var(--color-bg-elevated) 50%, var(--color-bg-tertiary) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@media (max-width: 768px) {
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-xl);
+    flex-direction: column;
+    align-items: stretch;
   }
-  
-  .title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-xs);
+
+  .filters {
+    width: 100%;
   }
-  
-  .subtitle {
-    font-size: var(--font-size-base);
-    color: var(--color-text-secondary);
+
+  .grid {
+    grid-template-columns: 1fr;
   }
-  
-  .searchBar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    background-color: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-sm) var(--space-md);
-    min-width: 300px;
-    transition: all var(--transition-fast);
-  }
-  
-  .searchBar:focus-within {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-light);
-  }
-  
-  .searchIcon {
-    font-size: var(--font-size-lg);
-    color: var(--color-text-tertiary);
-  }
-  
-  .searchInput {
-    flex: 1;
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-base);
-  }
-  
-  .searchInput::placeholder {
-    color: var(--color-text-tertiary);
-  }
-  
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: var(--space-sm);
-    border-bottom: 1px solid var(--color-border);
-  }
+}

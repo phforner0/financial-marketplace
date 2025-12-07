@@ -1,57 +1,54 @@
-/* src/app/globals.css */
+/* src/app/globals.css - LIMPO E CORRIGIDO */
 
 @import '../styles/variables.css';
 @import '../styles/reset.css';
 
-/* ============================================
-   TYPOGRAPHY UTILITIES
-   ============================================ */
+/* Força tema escuro no body */
+body {
+  background-color: var(--color-bg-primary) !important;
+  color: var(--color-text-primary) !important;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  min-height: 100vh;
+}
 
+/* Força tema escuro no html */
+html {
+  background-color: var(--color-bg-primary) !important;
+}
+
+/* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: var(--font-weight-semibold);
   line-height: var(--line-height-tight);
   color: var(--color-text-primary);
 }
 
-h1 {
-  font-size: var(--font-size-4xl);
-  letter-spacing: var(--letter-spacing-tight);
-}
-
-h2 {
-  font-size: var(--font-size-3xl);
-}
-
-h3 {
-  font-size: var(--font-size-2xl);
-}
-
-h4 {
-  font-size: var(--font-size-xl);
-}
-
-h5 {
-  font-size: var(--font-size-lg);
-}
-
-h6 {
-  font-size: var(--font-size-base);
-}
+h1 { font-size: var(--font-size-4xl); }
+h2 { font-size: var(--font-size-3xl); }
+h3 { font-size: var(--font-size-2xl); }
+h4 { font-size: var(--font-size-xl); }
+h5 { font-size: var(--font-size-lg); }
+h6 { font-size: var(--font-size-base); }
 
 p {
   line-height: var(--line-height-relaxed);
+  color: var(--color-text-primary);
 }
 
-small {
-  font-size: var(--font-size-sm);
-  color: var(--color-text-secondary);
+/* Links */
+a {
+  color: var(--color-text-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
 }
 
-/* ============================================
-   UTILITY CLASSES
-   ============================================ */
+a:hover {
+  color: var(--color-primary);
+}
 
-/* Text colors */
+/* Utility Classes */
 .text-primary { color: var(--color-text-primary); }
 .text-secondary { color: var(--color-text-secondary); }
 .text-tertiary { color: var(--color-text-tertiary); }
@@ -59,88 +56,15 @@ small {
 .text-danger { color: var(--color-danger); }
 .text-warning { color: var(--color-warning); }
 
-/* Market colors */
-.text-gain { color: var(--color-gain); }
-.text-loss { color: var(--color-loss); }
-
-/* Background colors */
-.bg-primary { background-color: var(--color-bg-primary); }
-.bg-secondary { background-color: var(--color-bg-secondary); }
-.bg-tertiary { background-color: var(--color-bg-tertiary); }
-.bg-elevated { background-color: var(--color-bg-elevated); }
-
-/* Font weights */
-.font-normal { font-weight: var(--font-weight-normal); }
-.font-medium { font-weight: var(--font-weight-medium); }
-.font-semibold { font-weight: var(--font-weight-semibold); }
-.font-bold { font-weight: var(--font-weight-bold); }
-
-/* Font sizes */
-.text-xs { font-size: var(--font-size-xs); }
-.text-sm { font-size: var(--font-size-sm); }
-.text-base { font-size: var(--font-size-base); }
-.text-lg { font-size: var(--font-size-lg); }
-.text-xl { font-size: var(--font-size-xl); }
-
-/* Spacing */
-.m-0 { margin: 0; }
-.mt-1 { margin-top: var(--space-xs); }
-.mt-2 { margin-top: var(--space-sm); }
-.mt-3 { margin-top: var(--space-md); }
-.mt-4 { margin-top: var(--space-lg); }
-.mb-1 { margin-bottom: var(--space-xs); }
-.mb-2 { margin-bottom: var(--space-sm); }
-.mb-3 { margin-bottom: var(--space-md); }
-.mb-4 { margin-bottom: var(--space-lg); }
-
-.p-0 { padding: 0; }
-.p-1 { padding: var(--space-xs); }
-.p-2 { padding: var(--space-sm); }
-.p-3 { padding: var(--space-md); }
-.p-4 { padding: var(--space-lg); }
-
-/* Flexbox utilities */
-.flex { display: flex; }
-.flex-col { flex-direction: column; }
-.flex-row { flex-direction: row; }
-.items-center { align-items: center; }
-.items-start { align-items: flex-start; }
-.items-end { align-items: flex-end; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.justify-start { justify-content: flex-start; }
-.justify-end { justify-content: flex-end; }
-.gap-1 { gap: var(--space-xs); }
-.gap-2 { gap: var(--space-sm); }
-.gap-3 { gap: var(--space-md); }
-.gap-4 { gap: var(--space-lg); }
-
-/* Width */
-.w-full { width: 100%; }
-.h-full { height: 100%; }
-
-/* Border radius */
-.rounded { border-radius: var(--radius-md); }
-.rounded-sm { border-radius: var(--radius-sm); }
-.rounded-lg { border-radius: var(--radius-lg); }
-.rounded-full { border-radius: var(--radius-full); }
-
-/* ============================================
-   ANIMATIONS
-   ============================================ */
-
+/* Animations */
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(10px);
+    transform: translateY(20px);
     opacity: 0;
   }
   to {
@@ -149,101 +73,30 @@ small {
   }
 }
 
-@keyframes slideDown {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-.animate-fadeIn {
-  animation: fadeIn var(--transition-base);
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-.animate-slideUp {
-  animation: slideUp var(--transition-base);
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.animate-slideDown {
-  animation: slideDown var(--transition-base);
+::-webkit-scrollbar-track {
+  background: var(--color-bg-secondary);
 }
 
-/* ============================================
-   RESPONSIVE HELPERS
-   ============================================ */
-
-.hide-mobile {
-  display: none;
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-hover);
+  border-radius: var(--radius-full);
 }
 
-.show-mobile {
-  display: block;
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-focus);
 }
-
-@media (min-width: 768px) {
-  .hide-mobile {
-    display: block;
-  }
-  
-  .show-mobile {
-    display: none;
-  }
-}
-
-/* ============================================
-   ANIMATIONS (CENTRALIZED)
-   ============================================ */
-
-   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  
-  @keyframes slideUp {
-    from {
-      transform: translateY(20px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes slideDown {
-    from {
-      transform: translateY(-10px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
-  }
-  
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-  
-  @keyframes bounceIn {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-    }
-    50% {
-      transform: scale(1.1);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }

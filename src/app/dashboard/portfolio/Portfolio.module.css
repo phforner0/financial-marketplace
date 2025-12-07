@@ -1,66 +1,90 @@
+/* src/app/dashboard/portfolio/Portfolio.module.css - CORRIGIDO */
 .container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2xl);
-  }
-  
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+.title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.actions button {
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: white;
+  background-color: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.actions button:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: var(--space-lg);
+}
+
+.card {
+  padding: var(--space-lg);
+  background-color: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.card span:first-child {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.card h2 {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  font-family: var(--font-mono);
+  margin: 0;
+}
+
+.holdings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.holdings h3 {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+@media (max-width: 768px) {
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--space-xl);
+    flex-direction: column;
+    align-items: stretch;
   }
-  
-  .title {
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--color-text-primary);
-    margin-bottom: var(--space-xs);
+
+  .summary {
+    grid-template-columns: 1fr;
   }
-  
-  .subtitle {
-    font-size: var(--font-size-base);
-    color: var(--color-text-secondary);
-  }
-  
-  .searchBar {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    background-color: var(--color-bg-secondary);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-sm) var(--space-md);
-    min-width: 300px;
-    transition: all var(--transition-fast);
-  }
-  
-  .searchBar:focus-within {
-    border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px var(--color-primary-light);
-  }
-  
-  .searchIcon {
-    font-size: var(--font-size-lg);
-    color: var(--color-text-tertiary);
-  }
-  
-  .searchInput {
-    flex: 1;
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-base);
-  }
-  
-  .searchInput::placeholder {
-    color: var(--color-text-tertiary);
-  }
-  
-  /* Tabs */
-  .tabs {
-    display: flex;
-    gap: var(--space-sm);
-    border-bottom: 1px solid var(--color-border);
-  }
+}
