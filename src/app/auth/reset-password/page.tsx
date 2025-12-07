@@ -2,7 +2,7 @@
 // src/app/auth/reset-password/page.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button/Button';
@@ -17,7 +17,8 @@ interface PasswordStrength {
   isValid: boolean;
 }
 
-export default function ResetPasswordPage() {
+// Componente interno que usa useSearchParams
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -32,7 +33,6 @@ export default function ResetPasswordPage() {
   const [tokenValid, setTokenValid] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Validate token on mount
     if (!token) {
       setError('Invalid or missing reset token');
       setTokenValid(false);
@@ -101,7 +101,6 @@ export default function ResetPasswordPage() {
 
       setSuccess(true);
       
-      // Auto-redirect after 3 seconds
       setTimeout(() => {
         router.push('/auth/login?reset=success');
       }, 3000);
@@ -114,13 +113,9 @@ export default function ResetPasswordPage() {
   // Token validation loading state
   if (tokenValid === null) {
     return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.verificationContainer}>
-            <div className={styles.spinner} />
-            <p className={styles.subtitle}>Validating reset link...</p>
-          </div>
-        </div>
+      <div className={styles.verificationContainer}>
+        <div className={styles.spinner} />
+        <p className={styles.subtitle}>Validating reset link...</p>
       </div>
     );
   }
@@ -128,194 +123,209 @@ export default function ResetPasswordPage() {
   // Invalid token
   if (tokenValid === false) {
     return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.verificationContainer}>
-            <div className={styles.errorIcon}>✕</div>
-            
-            <div className={styles.header}>
-              <h1 className={styles.title}>Invalid Link</h1>
-              <p className={styles.subtitle}>
-                This password reset link is invalid or has expired
-              </p>
-            </div>
-
-            <div className={`${styles.alert} ${styles.alertError}`}>
-              <span className={styles.alertIcon}>⚠️</span>
-              <span className={styles.alertContent}>
-                Password reset links expire after 15 minutes for security reasons.
-              </span>
-            </div>
-          </div>
+      <>
+        <div className={styles.verificationContainer}>
+          <div className={styles.errorIcon}>✕</div>
           
-          <div className={styles.form}>
-            <Link href="/auth/forgot-password" style={{ width: '100%' }}>
-              <Button variant="primary" fullWidth>
-                Request New Link
-              </Button>
-            </Link>
-            
-            <Link href="/auth/login" style={{ width: '100%' }}>
-              <Button variant="ghost" fullWidth>
-                Back to Login
-              </Button>
-            </Link>
+          <div className={styles.header}>
+            <h1 className={styles.title}>Invalid Link</h1>
+            <p className={styles.subtitle}>
+              This password reset link is invalid or has expired
+            </p>
+          </div>
+
+          <div className={`${styles.alert} ${styles.alertError}`}>
+            <span className={styles.alertIcon}>⚠️</span>
+            <span className={styles.alertContent}>
+              Password reset links expire after 15 minutes for security reasons.
+            </span>
           </div>
         </div>
-      </div>
+        
+        <div className={styles.form}>
+          <Link href="/auth/forgot-password" style={{ width: '100%' }}>
+            <Button variant="primary" fullWidth>
+              Request New Link
+            </Button>
+          </Link>
+          
+          <Link href="/auth/login" style={{ width: '100%' }}>
+            <Button variant="ghost" fullWidth>
+              Back to Login
+            </Button>
+          </Link>
+        </div>
+      </>
     );
   }
 
   // Success state
   if (success) {
     return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.verificationContainer}>
-            <div className={styles.successIcon}>✓</div>
-            
-            <div className={styles.header}>
-              <h1 className={styles.title}>Password Reset Successful!</h1>
-              <p className={styles.subtitle}>
-                Your password has been successfully reset.<br />
-                You can now sign in with your new password.
-              </p>
-            </div>
-
-            <div className={`${styles.alert} ${styles.alertSuccess}`}>
-              <span className={styles.alertIcon}>ℹ️</span>
-              <span className={styles.alertContent}>
-                Redirecting to login page...
-              </span>
-            </div>
+      <>
+        <div className={styles.verificationContainer}>
+          <div className={styles.successIcon}>✓</div>
+          
+          <div className={styles.header}>
+            <h1 className={styles.title}>Password Reset Successful!</h1>
+            <p className={styles.subtitle}>
+              Your password has been successfully reset.<br />
+              You can now sign in with your new password.
+            </p>
           </div>
 
-          <div className={styles.form}>
-            <Link href="/auth/login" style={{ width: '100%' }}>
-              <Button variant="primary" fullWidth>
-                Continue to Login
-              </Button>
-            </Link>
+          <div className={`${styles.alert} ${styles.alertSuccess}`}>
+            <span className={styles.alertIcon}>ℹ️</span>
+            <span className={styles.alertContent}>
+              Redirecting to login page...
+            </span>
           </div>
         </div>
-      </div>
+
+        <div className={styles.form}>
+          <Link href="/auth/login" style={{ width: '100%' }}>
+            <Button variant="primary" fullWidth>
+              Continue to Login
+            </Button>
+          </Link>
+        </div>
+      </>
     );
   }
 
   return (
-    <div className={styles.container}>
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <div className={styles.iconWrapper}>🔐</div>
-          <h1 className={styles.title}>Set New Password</h1>
-          <p className={styles.subtitle}>
-            Your new password must be different from previous passwords
-          </p>
+    <>
+      <div className={styles.header}>
+        <div className={styles.iconWrapper}>🔐</div>
+        <h1 className={styles.title}>Set New Password</h1>
+        <p className={styles.subtitle}>
+          Your new password must be different from previous passwords
+        </p>
+      </div>
+
+      {error && (
+        <div className={`${styles.alert} ${styles.alertError}`}>
+          <span className={styles.alertIcon}>⚠️</span>
+          <span className={styles.alertContent}>{error}</span>
         </div>
+      )}
 
-        {error && (
-          <div className={`${styles.alert} ${styles.alertError}`}>
-            <span className={styles.alertIcon}>⚠️</span>
-            <span className={styles.alertContent}>{error}</span>
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div>
-            <Input
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              label="New Password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError('');
-              }}
-              leftIcon="🔒"
-              rightIcon={
-                <button 
-                  type="button" 
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{ cursor: 'pointer', background: 'none', border: 'none' }}
-                >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
-                </button>
-              }
-              fullWidth
-              required
-            />
-            
-            {password && (
-              <div className={styles.passwordStrength}>
-                <div className={styles.strengthTitle}>Password must contain:</div>
-                <div className={styles.strengthRequirements}>
-                  <div className={`${styles.strengthRequirement} ${passwordStrength.minLength ? styles.met : styles.unmet}`}>
-                    <span className={styles.strengthIcon}>{passwordStrength.minLength ? '✓' : '○'}</span>
-                    At least 8 characters
-                  </div>
-                  <div className={`${styles.strengthRequirement} ${passwordStrength.hasUppercase ? styles.met : styles.unmet}`}>
-                    <span className={styles.strengthIcon}>{passwordStrength.hasUppercase ? '✓' : '○'}</span>
-                    One uppercase letter
-                  </div>
-                  <div className={`${styles.strengthRequirement} ${passwordStrength.hasLowercase ? styles.met : styles.unmet}`}>
-                    <span className={styles.strengthIcon}>{passwordStrength.hasLowercase ? '✓' : '○'}</span>
-                    One lowercase letter
-                  </div>
-                  <div className={`${styles.strengthRequirement} ${passwordStrength.hasNumber ? styles.met : styles.unmet}`}>
-                    <span className={styles.strengthIcon}>{passwordStrength.hasNumber ? '✓' : '○'}</span>
-                    One number
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
+      <form onSubmit={handleSubmit} className={styles.form}>
+        <div>
           <Input
-            name="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            label="Confirm Password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            label="New Password"
             placeholder="••••••••"
-            value={confirmPassword}
+            value={password}
             onChange={(e) => {
-              setConfirmPassword(e.target.value);
+              setPassword(e.target.value);
               setError('');
             }}
             leftIcon="🔒"
             rightIcon={
               <button 
                 type="button" 
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                onClick={() => setShowPassword(!showPassword)}
                 style={{ cursor: 'pointer', background: 'none', border: 'none' }}
               >
-                {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                {showPassword ? '👁️' : '👁️‍🗨️'}
               </button>
-            }
-            error={
-              confirmPassword && password !== confirmPassword
-                ? 'Passwords do not match'
-                : undefined
             }
             fullWidth
             required
           />
-
-          <Button 
-            type="submit" 
-            variant="primary" 
-            fullWidth 
-            loading={loading}
-            disabled={!passwordStrength.isValid || password !== confirmPassword}
-          >
-            Reset Password
-          </Button>
-        </form>
-
-        <div className={styles.footer}>
-          <Link href="/auth/login" className={styles.linkButton}>
-            ← Back to Login
-          </Link>
+          
+          {password && (
+            <div className={styles.passwordStrength}>
+              <div className={styles.strengthTitle}>Password must contain:</div>
+              <div className={styles.strengthRequirements}>
+                <div className={`${styles.strengthRequirement} ${passwordStrength.minLength ? styles.met : styles.unmet}`}>
+                  <span className={styles.strengthIcon}>{passwordStrength.minLength ? '✓' : '○'}</span>
+                  At least 8 characters
+                </div>
+                <div className={`${styles.strengthRequirement} ${passwordStrength.hasUppercase ? styles.met : styles.unmet}`}>
+                  <span className={styles.strengthIcon}>{passwordStrength.hasUppercase ? '✓' : '○'}</span>
+                  One uppercase letter
+                </div>
+                <div className={`${styles.strengthRequirement} ${passwordStrength.hasLowercase ? styles.met : styles.unmet}`}>
+                  <span className={styles.strengthIcon}>{passwordStrength.hasLowercase ? '✓' : '○'}</span>
+                  One lowercase letter
+                </div>
+                <div className={`${styles.strengthRequirement} ${passwordStrength.hasNumber ? styles.met : styles.unmet}`}>
+                  <span className={styles.strengthIcon}>{passwordStrength.hasNumber ? '✓' : '○'}</span>
+                  One number
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+
+        <Input
+          name="confirmPassword"
+          type={showConfirmPassword ? 'text' : 'password'}
+          label="Confirm Password"
+          placeholder="••••••••"
+          value={confirmPassword}
+          onChange={(e) => {
+            setConfirmPassword(e.target.value);
+            setError('');
+          }}
+          leftIcon="🔒"
+          rightIcon={
+            <button 
+              type="button" 
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{ cursor: 'pointer', background: 'none', border: 'none' }}
+            >
+              {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
+          }
+          error={
+            confirmPassword && password !== confirmPassword
+              ? 'Passwords do not match'
+              : undefined
+          }
+          fullWidth
+          required
+        />
+
+        <Button 
+          type="submit" 
+          variant="primary" 
+          fullWidth 
+          loading={loading}
+          disabled={!passwordStrength.isValid || password !== confirmPassword}
+        >
+          Reset Password
+        </Button>
+      </form>
+
+      <div className={styles.footer}>
+        <Link href="/auth/login" className={styles.linkButton}>
+          ← Back to Login
+        </Link>
+      </div>
+    </>
+  );
+}
+
+// Componente principal exportado
+export default function ResetPasswordPage() {
+  return (
+    <div className={styles.container}>
+      <div className={styles.card}>
+        <Suspense fallback={
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            padding: 'var(--space-xl)' 
+          }}>
+            <div className={styles.spinner} />
+          </div>
+        }>
+          <ResetPasswordForm />
+        </Suspense>
       </div>
     </div>
   );

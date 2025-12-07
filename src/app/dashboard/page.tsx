@@ -3,7 +3,7 @@
 
 import { useSession } from 'next-auth/react';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import useSWR from 'swr';
 import { MarketHeatmap } from '@/components/features/MarketHeatmap/MarketHeatmap';
 import PortfolioChart from '@/components/features/PortfolioChart/PortfolioChart';
@@ -11,39 +11,23 @@ import styles from './Dashboard.module.css';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-export default function DashboardPage() {
+// Componente interno que usa useSearchParams
+function DashboardContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [showWelcome, setShowWelcome] = useState(searchParams.get('tour') === 'true');
 
-  // Fetch portfolio data
-  const { data: portfolio, error: portfolioError } = useSWR(
-    '/api/portfolio',
-    fetcher,
-    { refreshInterval: 30000 }
-  );
-
-  // Fetch market indices
-  const { data: indices, error: indicesError } = useSWR(
-    '/api/markets/indices',
-    fetcher,
-    { refreshInterval: 60000 }
-  );
-
-  // Fetch top movers
+  // Fetch data
+  const { data: portfolio, error: portfolioError } = useSWR('/api/portfolio', fetcher, { refreshInterval: 30000 });
+  const { data: indices } = useSWR('/api/markets/indices', fetcher, { refreshInterval: 60000 });
   const { data: movers } = useSWR('/api/markets/movers', fetcher);
-
-  // Fetch watchlists count
   const { data: watchlistsCount } = useSWR('/api/watchlists/count', fetcher);
-
-  // Fetch alerts count
   const { data: alertsCount } = useSWR('/api/alerts/count', fetcher);
 
   const firstName = session?.user?.name?.split(' ')[0] || 'there';
 
   return (
     <div className={styles.dashboard}>
-      {/* Welcome Banner */}
       {showWelcome && (
         <div className={styles.welcomeBanner}>
           <div className={styles.welcomeIcon}>🎉</div>
@@ -64,7 +48,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Page Header */}
       <div className={styles.pageHeader}>
         <div>
           <h1 className={styles.pageTitle}>
@@ -76,7 +59,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick Stats Grid */}
       <div className={styles.statsGrid}>
         <StatCard
           label="Portfolio Value"
@@ -115,7 +97,6 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Market Heatmap */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Market Heatmap</h2>
@@ -126,14 +107,12 @@ export default function DashboardPage() {
         <MarketHeatmap />
       </div>
 
-      {/* Top Movers */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Top Movers</h2>
         </div>
 
         <div className={styles.moversGrid}>
-          {/* Top Gainers */}
           <div className={styles.moversCard}>
             <h3 className={styles.moversTitle}>
               <span className={styles.moversIcon}>📈</span>
@@ -150,7 +129,6 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Top Losers */}
           <div className={styles.moversCard}>
             <h3 className={styles.moversTitle}>
               <span className={styles.moversIcon}>📉</span>
@@ -169,7 +147,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Portfolio Performance Chart */}
       {portfolio && portfolio.totalValue > 0 && (
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
@@ -182,7 +159,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Empty State - Getting Started */}
       {portfolio && portfolio.totalValue === 0 && (
         <div className={styles.emptyState}>
           <div className={styles.emptyStateIcon}>🚀</div>
@@ -227,7 +203,6 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Market Overview Indices */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Market Overview</h2>
@@ -248,7 +223,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Learning Resources */}
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Learning Resources</h2>
@@ -279,10 +253,31 @@ export default function DashboardPage() {
   );
 }
 
-// ============================================
-// HELPER COMPONENTS
-// ============================================
+// Componente principal exportado
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        padding: 'var(--space-xl)' 
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '4px solid #2a2a2a',
+          borderTop: '4px solid #10b981',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
+  );
+}
 
+// Helper components (mantidos do original)
 interface StatCardProps {
   label: string;
   icon: string;
@@ -398,10 +393,7 @@ function IndexCardSkeleton() {
   );
 }
 
-// ============================================
-// UTILITY FUNCTIONS
-// ============================================
-
+// Utility functions
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

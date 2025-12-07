@@ -1,6 +1,7 @@
-// src/app/search/page.tsx (NOVO ARQUIVO)
+// src/app/search/page.tsx
 'use client';
 
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import useSWR from 'swr';
 import { StockCard } from '@/components/features/StockCard/StockCard';
@@ -8,7 +9,8 @@ import styles from './Search.module.css';
 
 const fetcher = (url: string) => fetch(url).then(r => r.json());
 
-export default function SearchPage() {
+// Componente interno que usa useSearchParams
+function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
 
@@ -18,7 +20,7 @@ export default function SearchPage() {
   );
 
   return (
-    <div className={styles.container}>
+    <>
       <h1>Search Results for "{query}"</h1>
       
       {error && <div className={styles.error}>Failed to load results</div>}
@@ -36,6 +38,19 @@ export default function SearchPage() {
           ))}
         </div>
       )}
+    </>
+  );
+}
+
+// Componente principal exportado
+export default function SearchPage() {
+  return (
+    <div className={styles.container}>
+      <Suspense fallback={
+        <div className={styles.loading}>Loading search...</div>
+      }>
+        <SearchContent />
+      </Suspense>
     </div>
   );
 }
