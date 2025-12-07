@@ -203,22 +203,40 @@ function DashboardContent() {
         </div>
       )}
 
-      <div className={styles.section}>
+<div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Market Overview</h2>
           <a href="/dashboard/markets" className={styles.sectionLink}>View all →</a>
         </div>
 
         <div className={styles.marketIndices}>
-          {indices ? (
+          {!indices ? (
+            // Loading state
+            Array(4).fill(0).map((_, i) => <IndexCardSkeleton key={i} />)
+          ) : (
             <>
+              {/* Mostra os índices disponíveis */}
+              {indices.ibovespa && <IndexCard data={indices.ibovespa} name="Ibovespa" />}
               {indices.sp500 && <IndexCard data={indices.sp500} name="S&P 500" />}
               {indices.nasdaq && <IndexCard data={indices.nasdaq} name="Nasdaq" />}
               {indices.dow && <IndexCard data={indices.dow} name="Dow Jones" />}
-              {indices.bitcoin && <IndexCard data={indices.bitcoin} name="Bitcoin" />}
+              
+              {/* Se nenhum índice carregou, mostra mensagem */}
+              {!indices.ibovespa && !indices.sp500 && !indices.nasdaq && !indices.dow && (
+                <div style={{
+                  gridColumn: '1 / -1',
+                  textAlign: 'center',
+                  padding: 'var(--space-2xl)',
+                  color: 'var(--color-text-secondary)'
+                }}>
+                  <span style={{ fontSize: '2rem', marginBottom: 'var(--space-md)', display: 'block' }}>📊</span>
+                  <p>Market indices temporarily unavailable</p>
+                  <p style={{ fontSize: 'var(--font-size-sm)', marginTop: 'var(--space-sm)' }}>
+                    API rate limit reached. Data will refresh automatically.
+                  </p>
+                </div>
+              )}
             </>
-          ) : (
-            Array(4).fill(0).map((_, i) => <IndexCardSkeleton key={i} />)
           )}
         </div>
       </div>
